@@ -1,0 +1,5 @@
+__pycache__/
+*.cnf
+glucose
+glucose4/
+.DS_Store
