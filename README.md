@@ -83,8 +83,10 @@ The experiment used the same 4,000-vertex graph (`instances/instance_1000_1.txt`
 | 2 | 8,000 | 16,000 | SAT | 0.0398 |
 | 3 | 12,000 | 28,000 | SAT | 0.0276 |
 | 4 | 16,000 | 44,000 | SAT | 44.0178 |
+| 5 | 20,000 | 64,000 | Undetermined after 1 hour | - |
 
-The $k=5$ run had yet to return a result when these timings were recorded.
+
+The $k=5$ run had not finished after 1 hour experimenting time.
 
 ```sh
 for k in 1 2 3 4; do
