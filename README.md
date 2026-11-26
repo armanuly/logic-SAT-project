@@ -31,9 +31,9 @@ python3 solver.py instances/small_unsat.txt
 python3 solver.py instances/instance_1000_1.txt
 ```
 
-The first line of an input file is `n m k`: the number of vertices, edges, and requested groups. The next `m` lines each contain one edge `u v`. Vertices are numbered from `0` to `n-1`. A second positional argument overrides `k`. Use `--stats` to show Glucose's statistics or `--print-cnf` to print the formula.
+The first line of an input file is `n m k`: the number of vertices, edges, and requested groups. The next `m` lines each contain one edge `u v`. Vertices are numbered from `0` to `n-1`. An optional positive integer after the filename overrides `k` for that run. Use `--stats` to show Glucose's statistics or `--print-cnf` to print the formula.
 
-Each run writes `formula.cnf` in the working directory. The output gives the formula size, elapsed time, and either `SAT` followed by the groups or `UNSAT`.
+Each run writes `formula.cnf` in the working directory and replaces any previous file with that name. The output gives the formula size, elapsed time, and either `SAT` followed by the dominating sets (`D_1`, `D_2`, etc.) or `UNSAT`.
 
 ## Instances
 
@@ -41,9 +41,11 @@ Each run writes `formula.cnf` in the working directory. The output gives the for
 |---|---|---|
 | `small_sat.txt` | Six-vertex cycle with $k=3$ | SAT. The sets {0, 3}, {1, 4}, and {2, 5} each dominate the cycle. |
 | `small_unsat.txt` | Five-vertex cycle with $k=3$ | UNSAT. Each dominating set needs at least two vertices, so three disjoint ones would need at least six vertices. |
-| `instance_1000_1.txt` | 4,000 vertices and 11,992 edges with $k=4$ | SAT by construction. |
+| `hard_sat.txt` | 3,200 vertices and 9,593 edges with $k=4$ | SAT. Earlier benchmark candidate. |
+| `instance_760_7.txt` | 3,040 vertices and 9,113 edges with $k=4$ | SAT. Earlier benchmark candidate. |
+| `instance_1000_1.txt` | 4,000 vertices and 11,992 edges with $k=4$ | SAT. Selected hard instance. |
 
-To reproduce the large graph, run:
+To regenerate the selected hard instance, run the following command. It overwrites that instance file if it already exists.
 
 ```sh
 python3 generate_instance.py 1000 1 instances/instance_1000_1.txt
@@ -57,19 +59,35 @@ The tests ran on a 16-inch MacBook Pro (2021) with an Apple M1 Pro chip, 16 GB o
 
 For the large cases, each graph was generated with four groups. The group size and seed determine the instance. These were three separate runs with $k=4$.
 
-| Vertices per group | Seed | Total vertices | Result | Glucose time (s) |
-|---:|---:|---:|---|---:|
-| 800 | 4 | 3,200 | SAT | 2.0068 |
-| 760 | 7 | 3,040 | SAT | 1.7036 |
-| 1,000 | 1 | 4,000 | SAT | 44.0178 |
+| File in `instances/` | Vertices per group | Seed | Total vertices | Result | Glucose time (s) |
+|---|---:|---:|---:|---|---:|
+| `hard_sat.txt` | 800 | 4 | 3,200 | SAT | 2.0068 |
+| `instance_760_7.txt` | 760 | 7 | 3,040 | SAT | 1.7036 |
+| `instance_1000_1.txt` | 1,000 | 1 | 4,000 | SAT | 44.0178 |
 
-The six-vertex cycle returned `SAT` for $k=3$ in 0.0082 seconds. The five-vertex cycle returned `UNSAT` for $k=3$ in 0.0086 seconds. The 4,000-vertex graph was selected as the hard instance because it returned SAT and took more than 10 seconds. Both the size and seed changed across the large cases, so the measurements describe these particular graphs. To reproduce the comparison from the project folder:
+The six-vertex cycle returned `SAT` for $k=3$ in 0.0082 seconds. The five-vertex cycle returned `UNSAT` for $k=3$ in 0.0086 seconds. The 4,000-vertex graph was selected as the hard instance because it returned SAT and took more than 10 seconds. Both the size and seed changed across the large cases, so the measurements describe these particular graphs. From the project folder, run the three included files with their recorded value of $k$.
 
 ```sh
-python3 generate_instance.py 800 4 /tmp/domatic_800_4.txt
-python3 generate_instance.py 760 7 /tmp/domatic_760_7.txt
-python3 generate_instance.py 1000 1 /tmp/domatic_1000_1.txt
-for input in /tmp/domatic_800_4.txt /tmp/domatic_760_7.txt /tmp/domatic_1000_1.txt; do
-  python3 solver.py "$input" | sed -n '1,3p'
+python3 solver.py instances/hard_sat.txt | sed -n '1,3p'
+python3 solver.py instances/instance_760_7.txt | sed -n '1,3p'
+python3 solver.py instances/instance_1000_1.txt | sed -n '1,3p'
+```
+
+### Varying the number of groups on a fixed graph
+
+The experiment used the same 4,000-vertex graph (`instances/instance_1000_1.txt`) for every run and changed only the requested number of dominating sets, $k$. The $k=4$ row reuses the hard-instance run above.
+
+| $k$ | Variables | Clauses | Result | Glucose time (s) |
+|---:|---:|---:|---|---:|
+| 1 | 4,000 | 8,000 | SAT | 0.0094 |
+| 2 | 8,000 | 16,000 | SAT | 0.0398 |
+| 3 | 12,000 | 28,000 | SAT | 0.0276 |
+| 4 | 16,000 | 44,000 | SAT | 44.0178 |
+
+The $k=5$ run had yet to return a result when these timings were recorded.
+
+```sh
+for k in 1 2 3 4; do
+  python3 solver.py instances/instance_1000_1.txt "$k" | sed -n '1,3p'
 done
 ```
