@@ -66,12 +66,14 @@ def write_cnf(num_vars, clauses, filename):
 
 def run_glucose(n, k):
     start = time.time()
-    res = subprocess.run(["./glucose", "-model", "formula.cnf"], capture_output=True, text=True)
+    res = subprocess.run(["./glucose-syrup", "-model", "formula.cnf"], capture_output=True, text=True)
     elapsed = time.time() - start
 
     output = res.stdout
-    if "s SATISFIABLE" not in output:
+    if res.returncode == 20:
         return None, elapsed, output
+    if res.returncode != 10:
+        raise SystemExit(f"Glucose failed (exit code {res.returncode}).")
 
     groups = []
     for i in range(k):
@@ -120,4 +122,3 @@ if __name__ == "__main__":
         for i in range(k):
             groups[i].sort()
             print("D_" + str(i + 1) + ":", groups[i])
-            
