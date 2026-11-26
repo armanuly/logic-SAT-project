@@ -51,3 +51,31 @@ def build_cnf(n, k, adj):
             clauses.append(clause)
 
     return n * k, clauses
+
+def write_cnf(num_vars, clauses, filename):
+    f = open(filename, "w")
+    f.write("p cnf " + str(num_vars) + " " + str(len(clauses)) + "\n")
+    for clause in clauses:
+        line = ""
+        for lit in clause:
+            line += str(lit) + " "
+        f.write(line + "0\n")
+    f.close()
+
+
+if __name__ == "__main__":
+    filename = sys.argv[1]
+    n, k, adj = read_graph(filename)
+    if len(sys.argv) > 2 and sys.argv[2].isdigit():
+        k = int(sys.argv[2])
+
+    num_vars, clauses = build_cnf(n, k, adj)
+    write_cnf(num_vars, clauses, "formula.cnf")
+
+    if "--print-cnf" in sys.argv:
+        f = open("formula.cnf", "r")
+        print(f.read(), end="")
+        f.close()
+    else:
+        print("Variables:", num_vars, "Clauses:", len(clauses))
+        
